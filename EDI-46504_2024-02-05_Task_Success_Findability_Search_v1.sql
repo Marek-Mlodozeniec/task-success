@@ -37,47 +37,24 @@ WITH
   WHERE
     DATE(lf._partitiontime) BETWEEN start_date AND end_date
     AND DATE(sl._partitiontime) BETWEEN start_date AND end_date
-),
-
-`agg_by_month_device_marketplace` AS (
-  SELECT
-    DATE_TRUNC(v_date, MONTH) AS dt_mth,
-    marketplace,
-    'Findability' AS track,
-    'Using search engine' AS touch_point,
-    weight_value_group,
-    AVG(conversion) AS task_success,
-    COUNT(DISTINCT search_id) AS n
-    FROM `raw`
-  GROUP BY
-    dt_mth,
-    weight_value_group,
-    marketplace
-),
-
-`agg_by_month_marketplace` AS (
-  SELECT
-    DATE_TRUNC(v_date, MONTH) AS dt_mth,
-    marketplace,
-    'Findability' AS track,
-    'Using search engine' AS touch_point,
-    'Total' AS weight_value_group,
-    AVG(conversion) AS task_success,
-    COUNT(DISTINCT search_id) AS n
-    FROM `raw`
-  GROUP BY
-    dt_mth,
-    marketplace
 )
 
-(
-  SELECT *
-  FROM `agg_by_month_device_marketplace`
-  UNION ALL
-  SELECT *
-  FROM `agg_by_month_marketplace`
-)
+SELECT
+  DATE_TRUNC(v_date, MONTH) AS dt_mth,
+  marketplace,
+  'Findability' AS track,
+  'Using search engine' AS touch_point,
+  weight_value_group,
+  SUM(conversion) AS numerator,
+  COUNT(DISTINCT search_id) AS denominator,
+  AVG(conversion) AS task_success
+FROM `raw`
+GROUP BY
+  dt_mth,
+  weight_value_group,
+  marketplace
 ORDER BY
   dt_mth,
   marketplace,
-  weight_value_group;
+  weight_value_group
+;
